@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio & Path Hub - Light Theme</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #334155;
+            --border-color: #cbd5e1;
+            --accent: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --toast-bg: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        h1 { margin: 0; font-size: 1.4rem; color: #0f172a; }
+        .status { font-weight: 600; font-size: 0.85rem; }
+        .connected { color: var(--success); }
+        .disconnected { color: var(--danger); }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        h2 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; color: #0f172a; }
+
+        .route-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        input {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Custom Keyboard-Navigable Dropdown Component */
+        .custom-select-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .custom-select-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #f8fafc url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23334155%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") no-repeat right 12px center;
+            background-size: 10px;
+            cursor: pointer;
+        }
+
+        .custom-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .custom-dropdown-list.open {
+            display: block;
+        }
+
+        .dropdown-group-title {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .dropdown-item:hover, .dropdown-item.highlighted {
+            background: #eff6ff;
+            color: var(--accent);
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+        button.danger { background: var(--danger); }
+        button.success { background: var(--success); }
+        button.secondary { background: #64748b; }
+
+        .button-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #logs {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            height: 140px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: var(--toast-bg);
+            color: #f8fafc;
+            padding: 14px 22px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+            border-left: 5px solid var(--accent);
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">Notification text here</div>
+
+    <div class="container">
+        <header>
+            <h1>Audio & Path Hub</h1>
+            <div id="status" class="status disconnected">Disconnected</div>
+        </header>
+
+        <div class="card">
+            <h2>Editable Paths & Audio Mapping</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Configure routes. Use dropdowns (fully keyboard navigable: Arrows + Enter) or type to search tracks.</p>
+            <div id="routes-container"></div>
+            
+            <div class="button-group">
+                <button onclick="addRouteRow()">+ Add Route</button>
+                <button class="success" onclick="saveRoutesToFile()">Save to JSON</button>
+                <button class="secondary" onclick="loadRoutesFromFileEndpoint()">Load from JSON</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Live Event Logs</h2>
+            <div id="logs">Waiting for server triggers...</div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="successAudio" src="https://cdn.pixabay.com/audio/2025/05/12/audio_582a9c9e72.mp3"></audio>
+    <audio id="successAudio2" src="https://cdn.pixabay.com/audio/2024/07/04/audio_5fd8f48411.mp3"></audio>
+    <audio id="successAudio3" src="https://cdn.pixabay.com/audio/2026/04/09/audio_aea4fb169a.mp3"></audio>
+    <audio id="successAudio4" src="https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3"></audio>
+    <audio id="successAudio5" src="https://cdn.pixabay.com/audio/2022/03/10/audio_f96ec71310.mp3"></audio>
+    <audio id="successAudio6" src="https://cdn.pixabay.com/audio/2025/08/05/audio_8e7f55cba7.mp3"></audio>
+    <audio id="successAudio7" src="https://cdn.pixabay.com/audio/2022/03/15/audio_f65046c221.mp3"></audio>
+    <audio id="successAudio8" src="https://cdn.pixabay.com/audio/2026/07/29/audio_6b3b29cb40.mp3"></audio>
+    <audio id="successAudio9" src="https://cdn.pixabay.com/audio/2025/01/30/audio_4fffd36717.mp3"></audio>
+    <audio id="successAudio10" src="https://cdn.pixabay.com/audio/2022/03/10/audio_f211cbbc55.mp3"></audio>
+    <audio id="successAudio11" src="https://cdn.pixabay.com/audio/2026/04/21/audio_91e895fa54.mp3"></audio>
+    <audio id="successAudio12" src="https://cdn.pixabay.com/audio/2021/08/04/audio_bb630cc098.mp3"></audio>
+    <audio id="successAudio13" src="https://cdn.pixabay.com/audio/2022/03/14/audio_e5d45682de.mp3"></audio>
+    <audio id="successAudio14" src="https://cdn.pixabay.com/audio/2026/05/07/audio_9c1018d295.mp3"></audio>
+    <audio id="successAudio15" src="https://cdn.pixabay.com/audio/2025/08/05/audio_7e7bb547fd.mp3"></audio>
+    <audio id="successAudio16" src="https://cdn.pixabay.com/audio/2026/01/17/audio_b017741240.mp3"></audio>
+    <audio id="successAudio17" src="https://cdn.pixabay.com/audio/2026/04/29/audio_02ddb885e5.mp3"></audio>
+    
+    <audio id="errorAudio" src="https://cdn.pixabay.com/audio/2025/05/31/audio_e9d22d9131.mp3"></audio>
+    <audio id="errorAudio2" src="https://cdn.pixabay.com/audio/2022/03/10/audio_e4e7943871.mp3"></audio>
+    <audio id="errorAudio3" src="https://cdn.pixabay.com/audio/2023/10/10/audio_3e4f4231e9.mp3"></audio>
+    <audio id="errorAudio4" src="https://cdn.pixabay.com/audio/2022/11/13/audio_a5bc07904a.mp3"></audio>
+
+    <script>
+        let statusDiv = document.getElementById('status');
+        let routesContainer = document.getElementById('routes-container');
+        let logsDiv = document.getElementById('logs');
+        let toastEl = document.getElementById('toast');
+
+        let currentRoutes = [
+            { path: '/success', audio: 'successAudio' },
+            { path: '/error', audio: 'errorAudio' }
+        ];
+
+        let availableTracks = [
+            { id: 'successAudio', label: 'Success 1', group: 'Success Tracks' },
+            { id: 'successAudio2', label: 'Success 2', group: 'Success Tracks' },
+            { id: 'successAudio3', label: 'Success 3', group: 'Success Tracks' },
+            { id: 'successAudio4', label: 'Success 4', group: 'Success Tracks' },
+            { id: 'successAudio5', label: 'Success 5', group: 'Success Tracks' },
+            { id: 'successAudio6', label: 'Success 6', group: 'Success Tracks' },
+            { id: 'successAudio7', label: 'Success 7', group: 'Success Tracks' },
+            { id: 'successAudio8', label: 'Success 8', group: 'Success Tracks' },
+            { id: 'successAudio9', label: 'Success 9', group: 'Success Tracks' },
+            { id: 'successAudio10', label: 'Success 10', group: 'Success Tracks' },
+            { id: 'successAudio11', label: 'Success 11', group: 'Success Tracks' },
+            { id: 'successAudio12', label: 'Success 12', group: 'Success Tracks' },
+            { id: 'successAudio13', label: 'Success 13', group: 'Success Tracks' },
+            { id: 'successAudio14', label: 'Success 14', group: 'Success Tracks' },
+            { id: 'successAudio15', label: 'Success 15', group: 'Success Tracks' },
+            { id: 'successAudio16', label: 'Success 16', group: 'Success Tracks' },
+            { id: 'successAudio17', label: 'Success 17', group: 'Success Tracks' },
+            { id: 'errorAudio', label: 'Error 1', group: 'Error Tracks' },
+            { id: 'errorAudio2', label: 'Error 2', group: 'Error Tracks' },
+            { id: 'errorAudio3', label: 'Error 3', group: 'Error Tracks' },
+            { id: 'errorAudio4', label: 'Error 4', group: 'Error Tracks' }
+        ];
+
+        let ws;
+
+        function connectWebSocket() {
+            let wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                statusDiv.textContent = 'Connected';
+                statusDiv.className = 'status connected';
+                logMessage('WebSocket connected.');
+                syncToServer();
+            };
+
+            ws.onclose = () => {
+                statusDiv.textContent = 'Disconnected (Reconnecting...)';
+                statusDiv.className = 'status disconnected';
+                logMessage('Connection lost. Retrying in 3s...');
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = () => { ws.close(); };
+
+            ws.onmessage = (event) => {
+                let data = JSON.parse(event.data);
+                if (data.type === 'trigger') {
+                    handleTriggerEvent(data.path, data.audio, data.n);
+                }
+            };
+        }
+
+        function renderRoutes() {
+            routesContainer.innerHTML = '';
+            currentRoutes.forEach((route, index) => {
+                let row = document.createElement('div');
+                row.className = 'route-row';
+                
+                let selectedTrack = availableTracks.find(t => t.id === route.audio) || availableTracks[0];
+
+                let selectWrapper = document.createElement('div');
+                selectWrapper.className = 'custom-select-wrapper';
+
+                let inputEl = document.createElement('input');
+                inputEl.type = 'text';
+                inputEl.className = 'custom-select-input';
+                inputEl.value = selectedTrack.label;
+                inputEl.readOnly = true;
+
+                let listEl = document.createElement('div');
+                listEl.className = 'custom-dropdown-list';
+
+                let highlightedIndex = -1;
+
+                function populateList(filter = '') {
+                    listEl.innerHTML = '';
+                    let groups = {};
+                    availableTracks.forEach(t => {
+                        if (!t.label.toLowerCase().includes(filter.toLowerCase())) return;
+                        if (!groups[t.group]) groups[t.group] = [];
+                        groups[t.group].push(t);
+                    });
+
+                    let itemsCount = 0;
+                    for (let groupName in groups) {
+                        let title = document.createElement('div');
+                        title.className = 'dropdown-group-title';
+                        title.textContent = groupName;
+                        listEl.appendChild(title);
+
+                        groups[groupName].forEach(track => {
+                            let item = document.createElement('div');
+                            item.className = 'dropdown-item';
+                            item.textContent = track.label;
+                            item.dataset.id = track.id;
+                            
+                            item.onmousedown = (e) => {
+                                e.preventDefault();
+                                selectTrack(track);
+                            };
+                            listEl.appendChild(item);
+                            itemsCount++;
+                        });
+                    }
+                }
+
+                function selectTrack(track) {
+                    inputEl.value = track.label;
+                    updateRouteData(index, 'audio', track.id);
+                    listEl.classList.remove('open');
+                }
+
+                inputEl.onclick = () => {
+                    // Close other dropdowns
+                    document.querySelectorAll('.custom-dropdown-list').forEach(l => {
+                        if (l !== listEl) l.classList.remove('open');
+                    });
+                    populateList();
+                    listEl.classList.toggle('open');
+                };
+
+                // Keyboard Navigation Support
+                inputEl.onkeydown = (e) => {
+                    let isOpen = listEl.classList.contains('open');
+                    let items = listEl.querySelectorAll('.dropdown-item');
+
+                    if (!isOpen && (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        populateList();
+                        listEl.classList.add('open');
+                        return;
+                    }
+
+                    if (!isOpen) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        highlightedIndex = (highlightedIndex + 1) % items.length;
+                        updateHighlight(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+                        updateHighlight(items);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (highlightedIndex >= 0 && items[highlightedIndex]) {
+                            let trackId = items[highlightedIndex].dataset.id;
+                            let track = availableTracks.find(t => t.id === trackId);
+                            if (track) selectTrack(track);
+                        }
+                    } else if (e.key === 'Escape') {
+                        listEl.classList.remove('open');
+                    }
+                };
+
+                function updateHighlight(items) {
+                    items.forEach((item, idx) => {
+                        if (idx === highlightedIndex) {
+                            item.classList.add('highlighted');
+                            item.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            item.classList.remove('highlighted');
+                        }
+                    });
+                }
+
+                // Close dropdown on outside click
+                document.addEventListener('click', (e) => {
+                    if (!selectWrapper.contains(e.target)) {
+                        listEl.classList.remove('open');
+                    }
+                });
+
+                populateList();
+
+                selectWrapper.appendChild(inputEl);
+                selectWrapper.appendChild(listEl);
+
+                let pathInput = document.createElement('input');
+                pathInput.type = 'text';
+                pathInput.value = route.path;
+                pathInput.placeholder = '/path';
+                pathInput.oninput = (e) => updateRouteData(index, 'path', e.target.value);
+
+                let deleteBtn = document.createElement('button');
+                deleteBtn.className = 'danger';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => removeRouteRow(index);
+
+                let testBtn = document.createElement('button');
+                testBtn.textContent = 'Test';
+                testBtn.onclick = () => window.open(route.path, '_blank');
+
+                row.appendChild(pathInput);
+                row.appendChild(selectWrapper);
+                row.appendChild(deleteBtn);
+                row.appendChild(testBtn);
+
+                routesContainer.appendChild(row);
+            });
+        }
+
+        function addRouteRow() {
+            currentRoutes.push({ path: '/custom-path', audio: 'successAudio' });
+            renderRoutes();
+            syncToServer();
+        }
+
+        function removeRouteRow(index) {
+            currentRoutes.splice(index, 1);
+            renderRoutes();
+            syncToServer();
+        }
+
+        function updateRouteData(index, field, value) {
+            currentRoutes[index][field] = value;
+            syncToServer();
+        }
+
+        function syncToServer() {
+            if (ws && ws.readyState === ws.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'sync_client_routes',
+                    routes: currentRoutes
+                }));
+            }
+        }
+
+        async function saveRoutesToFile() {
+            try {
+                let response = await fetch('/api/save-routes', { method: 'POST' });
+                let result = await response.json();
+                showToast(result.message, 'success');
+                logMessage(result.message);
+            } catch (err) {
+                showToast('Failed to save to JSON', 'error');
+            }
+        }
+
+        async function loadRoutesFromFileEndpoint() {
+            try {
+                let response = await fetch('/api/load-routes');
+                let result = await response.json();
+                if (result.routes) {
+                    currentRoutes = result.routes.map(([path, audio]) => ({ path, audio }));
+                    renderRoutes();
+                    showToast('Routes loaded from JSON!', 'success');
+                    logMessage('Loaded routes from server JSON file.');
+                }
+            } catch (err) {
+                showToast('Failed to load from JSON', 'error');
+            }
+        }
+
+        function handleTriggerEvent(path, audioId, n) {
+            let detailsText = n !== undefined ? `${path}?n=${n}` : path;
+            logMessage(`Triggered! Path: [${detailsText}] -> Audio: [${audioId}]`);
+
+            let audioEl = document.getElementById(audioId) || document.getElementById('successAudio');
+            if (audioEl) {
+                audioEl.currentTime = 0;
+                audioEl.play().catch(err => logMessage(`Audio autoplay restricted: ${err}`));
+            }
+
+            let isSuccess = audioId.startsWith('success');
+            let toastMessage = n !== undefined ? `Hit: ${path} (n=${n})` : `Hit: ${path}`;
+            showToast(toastMessage, isSuccess ? 'success' : 'error');
+        }
+
+        function showToast(message, type) {
+            toastEl.textContent = message;
+            toastEl.style.borderLeftColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            toastEl.classList.add('show');
+            setTimeout(() => {
+                toastEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function logMessage(msg) {
+            let timestamp = new Date().toLocaleTimeString();
+            logsDiv.innerHTML += `[${timestamp}] ${msg}<br>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        renderRoutes();
+        connectWebSocket();
+    </script>
+</body>
+</html>
